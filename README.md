@@ -1,2 +1,0 @@
-# SpringSecurityTest
-Practice Spring Security
