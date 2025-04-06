@@ -29,14 +29,18 @@ spring:
   #    web:
   #      pageable:
   #        one-indexed-parameters: true
-  jpa:
-    database-platform: org.hibernate.dialect.MySQL8Dialect
+jpa:
+  database-platform: org.hibernate.dialect.MySQL8Dialect
+  hibernate:
+    ddl-auto: none
+  show-sql: true
+  properties:
     hibernate:
-      ddl-auto: none
-    show-sql: true
-    properties:
-      hibernate:
-        format_sql: true
+      format_sql: true
+
+jwt:
+  secret: 84a831ea5e9c5d6ef52cf5e6ce7c0e8ff527e0f6b8f70daa564fd55b1f9a7949
+
 #  sql:
 #    init:
 #      mode: always
