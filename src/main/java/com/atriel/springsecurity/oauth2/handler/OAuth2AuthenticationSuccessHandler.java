@@ -1,38 +1,85 @@
-package com.atriel.springsecurity.oauth2.service;
+package com.atriel.springsecurity.oauth2.handler;
 
+import com.atriel.springsecurity.analytics.GoogleAnalyticsService;
 import com.atriel.springsecurity.entity.User;
-import com.atriel.springsecurity.model.repository.UserRepository;
-import com.atriel.springsecurity.oauth2.user.GoogleOAuth2User; // Google OAuth2User 사용
-import com.atriel.springsecurity.oauth2.user.GoogleOAuth2UserInfo;
-import com.atriel.springsecurity.oauth2.user.OAuth2UserInfo;
-import com.atriel.springsecurity.security.vo.Authority;
+import com.atriel.springsecurity.oauth2.service.CustomOAuth2UserService;
+import com.atriel.springsecurity.security.jwt.JwtTokenProvider;
+import com.atriel.springsecurity.security.refreshtoken.RefreshToken;
+import com.atriel.springsecurity.security.refreshtoken.RefreshTokenService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
-import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
-import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
-import org.springframework.security.oauth2.core.oidc.user.OidcUser;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
+import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.stereotype.Service;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
+import org.springframework.stereotype.Component;
+import org.springframework.web.util.UriComponentsBuilder;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 
-@Service
-public class CustomOAuth2UserService extends DefaultOAuth2UserService {
+@Component
+public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
     @Autowired
-    private UserRepository userRepository;
+    private JwtTokenProvider jwtTokenProvider;
+
+    @Autowired
+    private CustomOAuth2UserService customOAuth2UserService;
+
+    @Autowired
+    private RefreshTokenService refreshTokenService;
+
+    @Value("${jwt.access-token-expiry}")
+    private long accessTokenExpirySeconds;
+
+    @Autowired
+    private com.atriel.springsecurity.model.repository.UserRepository userRepository;
+
+    @Value("${spring.security.oauth2.client.registration.google.redirect-uri}")
+    private String googleRedirectUri;
+
+    @Autowired
+    private HttpSessionOAuth2AuthorizationRequestRepository httpSessionOAuth2AuthorizationRequestRepository;
+
+    @Autowired
+    private GoogleAnalyticsService googleAnalyticsService; // GoogleAnalyticsService 주입
 
     @Override
-    public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException {
-        OAuth2User oAuth2User = super.loadUser(userRequest);
-        return processOAuth2User(userRequest, oAuth2User);
+    public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
+        OAuth2User oAuth2User = (OAuth2User) authentication.getPrincipal();
+        User user = processOAuth2User(oAuth2User);
+
+        // JWT 액세스 토큰 생성
+        String accessToken = jwtTokenProvider.generateToken(
+                new UsernamePasswordAuthenticationToken(user.getName(), null, oAuth2User.getAuthorities()));
+
+        // 리프레시 토큰 생성
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+
+        // 쿠키 대신 URL 파라미터로 토큰 전달
+        String redirectUrl = UriComponentsBuilder.fromUriString("http://localhost:3000/")
+                .queryParam("token", accessToken)
+                .queryParam("refreshToken", refreshToken.getToken())
+                .build().toUriString();
+
+        response.sendRedirect(redirectUrl);
     }
 
     private User processOAuth2User(OAuth2User oAuth2User) {
-        GoogleOAuth2UserInfo oAuth2UserInfo = new GoogleOAuth2UserInfo(oAuth2User.getAttributes());
+        // oAuth2User의 속성을 이용하여 User 엔티티를 생성하거나 조회하는 로직
+        com.atriel.springsecurity.oauth2.user.GoogleOAuth2UserInfo oAuth2UserInfo = new com.atriel.springsecurity.oauth2.user.GoogleOAuth2UserInfo(oAuth2User.getAttributes());
 
-        Optional<User> userOptional = userRepository.findByGoogleId(oAuth2UserInfo.getId());
+        java.util.Optional<User> userOptional = userRepository.findByGoogleId(oAuth2UserInfo.getId());
         User user;
 
         if (userOptional.isPresent()) {
@@ -44,21 +91,20 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         } else {
             user = registerNewUser(oAuth2UserInfo);
         }
-
         return user;
     }
 
-    private User registerNewUser(OAuth2UserInfo oAuth2UserInfo) {
+    private User registerNewUser(com.atriel.springsecurity.oauth2.user.GoogleOAuth2UserInfo oAuth2UserInfo) {
         User user = new User();
         user.setGoogleId(oAuth2UserInfo.getId());
         user.setName(oAuth2UserInfo.getName());
         user.setEmail(oAuth2UserInfo.getEmail());
         user.setPicture(oAuth2UserInfo.getPictureUrl());
-        user.setAuthority(Authority.ROLE_USER); // 기본 권한 설정
+        user.setAuthority(com.atriel.springsecurity.security.vo.Authority.ROLE_USER);
         return userRepository.save(user);
     }
 
-    private User updateUser(User existingUser, OAuth2UserInfo oAuth2UserInfo) {
+    private User updateUser(User existingUser, com.atriel.springsecurity.oauth2.user.GoogleOAuth2UserInfo oAuth2UserInfo) {
         existingUser.setName(oAuth2UserInfo.getName());
         existingUser.setPicture(oAuth2UserInfo.getPictureUrl());
         return userRepository.save(existingUser);

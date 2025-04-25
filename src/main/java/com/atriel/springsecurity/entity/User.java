@@ -1,5 +1,6 @@
-package com.atriel.springsecurity.security.entity;
+package com.atriel.springsecurity.entity;
 
+import com.atriel.springsecurity.security.vo.Authority;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -24,14 +25,40 @@ public class User {
     @Column(nullable = false, unique = true)
     private String email;    // 이메일 주소
 
-    @Column(nullable = true) // 프로필 사진 URL은 필수가 아닐 수 있으므로 nullable = true 설정
+    @Column(nullable = true)
     private String picture;  // 프로필 사진 URL
 
-    // Google API 관련 정보 (별도 엔티티 또는 JSON 형태로 저장 고려)
-    // private String googleAccessToken;
-    // private String googleRefreshToken;
+    @Column(nullable = true)
+    private String gender;
 
-    // 기타 필요한 정보
+    @Column(nullable = true)
+    private java.util.Date hire_date;
 
-    // 생성자, 메서드 등
+    @Column(nullable = true)
+    private String etc;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Authority authority; // 권한 정보 (Authority enum 사용)
+
+    // OAuth2 사용자 정보 기반 생성자
+    public User(String googleId, String name, String email, String picture, Authority authority) {
+        this.googleId = googleId;
+        this.name = name;
+        this.email = email;
+        this.picture = picture;
+        this.authority = authority;
+    }
+
+    // 기존 정보 기반 생성자 (필요하다면)
+    public User(String googleId, String name, String email, String picture, String gender, java.util.Date hire_date, String etc, Authority authority) {
+        this.googleId = googleId;
+        this.name = name;
+        this.email = email;
+        this.picture = picture;
+        this.gender = gender;
+        this.hire_date = hire_date;
+        this.etc = etc;
+        this.authority = authority;
+    }
 }

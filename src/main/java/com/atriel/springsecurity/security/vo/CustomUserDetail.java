@@ -15,7 +15,7 @@ public class CustomUserDetail implements UserDetails {
     private String id;
     private String password;
     private String username;
-    private String AUTHORITY;
+    private Authority AUTHORITY;
     private String gender;
     private Date hire_date;
     private String etc;
@@ -25,7 +25,7 @@ public class CustomUserDetail implements UserDetails {
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         ArrayList<GrantedAuthority> auth = new ArrayList<GrantedAuthority>();
-        auth.add(new SimpleGrantedAuthority(AUTHORITY));
+        auth.add(new SimpleGrantedAuthority(AUTHORITY.name()));
         return auth;
     }
 
@@ -53,11 +53,11 @@ public class CustomUserDetail implements UserDetails {
         this.username = name;
     }
 
-    public String getAUTHORITY() {
+    public Authority getAUTHORITY() {
         return AUTHORITY;
     }
 
-    public void setAUTHORITY(String AUTHORITY) {
+    public void setAUTHORITY(Authority AUTHORITY) {
         this.AUTHORITY = AUTHORITY;
     }
 
