@@ -1,6 +1,6 @@
 package com.atriel.springsecurity.model.repository;
 
-import com.atriel.springsecurity.entity.User;
+import com.atriel.springsecurity.model.repository.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

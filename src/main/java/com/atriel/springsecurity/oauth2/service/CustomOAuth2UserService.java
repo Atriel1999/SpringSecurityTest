@@ -1,6 +1,6 @@
 package com.atriel.springsecurity.oauth2.service;
 
-import com.atriel.springsecurity.entity.User;
+import com.atriel.springsecurity.model.repository.entity.User;
 import com.atriel.springsecurity.model.repository.UserRepository;
 import com.atriel.springsecurity.oauth2.user.GoogleOAuth2UserInfo;
 import com.atriel.springsecurity.oauth2.user.OAuth2UserInfo;

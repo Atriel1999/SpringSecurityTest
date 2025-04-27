@@ -1,4 +1,4 @@
-package com.atriel.springsecurity.entity;
+package com.atriel.springsecurity.model.repository.entity;
 
 import com.atriel.springsecurity.security.vo.Authority;
 import jakarta.persistence.*;

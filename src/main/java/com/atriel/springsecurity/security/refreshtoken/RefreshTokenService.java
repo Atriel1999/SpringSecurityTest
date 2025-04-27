@@ -1,6 +1,6 @@
 package com.atriel.springsecurity.security.refreshtoken;
 
-import com.atriel.springsecurity.entity.User;
+import com.atriel.springsecurity.model.repository.entity.User;
 import com.atriel.springsecurity.security.jwt.JwtTokenProvider;
 import com.atriel.springsecurity.exception.TokenRefreshException;
 import org.springframework.beans.factory.annotation.Autowired;

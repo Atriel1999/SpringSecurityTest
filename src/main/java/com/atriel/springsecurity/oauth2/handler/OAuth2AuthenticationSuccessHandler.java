@@ -1,31 +1,24 @@
 package com.atriel.springsecurity.oauth2.handler;
 
 import com.atriel.springsecurity.analytics.GoogleAnalyticsService;
-import com.atriel.springsecurity.entity.User;
+import com.atriel.springsecurity.model.repository.entity.User;
 import com.atriel.springsecurity.oauth2.service.CustomOAuth2UserService;
 import com.atriel.springsecurity.security.jwt.JwtTokenProvider;
 import com.atriel.springsecurity.security.refreshtoken.RefreshToken;
 import com.atriel.springsecurity.security.refreshtoken.RefreshTokenService;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.security.oauth2.client.web.HttpSessionOAuth2AuthorizationRequestRepository;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 @Component
 public class OAuth2AuthenticationSuccessHandler implements AuthenticationSuccessHandler {
